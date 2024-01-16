@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using LinqPractices.DBOperations;
 using LinqPractices.Entities;
 
@@ -12,41 +13,32 @@ class Program
         DataSeeder.Seed();
         LinqDbContext _context = new LinqDbContext();
 
-        while (true)
+        foreach (Student student in _context.Students)
         {
-            if (!int.TryParse(GetInputFromUser("Please enter"), out int input))
-            {
-                Console.WriteLine("Value is not numeric!");
-            }
-            else if (input < 1)
-            {
-                Console.WriteLine($"Error: value must be greater than zero! input: {input}");
-                break;
-            }
-            else
-            {
-                foreach (Student student in _context.Students)
-                {
-                    Console.WriteLine($"Id: {student.Id} Name: {student.Name} Surname: {student.Surname} ClassId: {student.ClassId}");
-                }
-            }
+            Console.WriteLine(StudentText(student));
+        }
+        Console.WriteLine();
+
+        Console.WriteLine("Find: {0}", StudentText(_context.Students.Find(2)));
+        Console.WriteLine("FirstOrDefault: {0}", StudentText(_context.Students.FirstOrDefault(x => x.Surname.Equals("Arda"))));
+        Console.WriteLine("SingleOrDefault: {0}", StudentText(_context.Students.SingleOrDefault(x => x.Surname.Equals("Tembel"))));
+        Console.WriteLine("OrderBy:");
+        foreach (Student student in _context.Students.OrderBy(x => x.Name).ToList())
+        {
+            Console.WriteLine(StudentText(student));
+        }
+        Console.WriteLine("Anonymous Object Result:");
+        var anonymousObject = _context.Students.Where(x => x.ClassId == 2).Select(x => new { Id = x.Id, FullName = x.Name + " " + x.Surname });
+
+        foreach (var anObj in anonymousObject)
+        {
+            Console.WriteLine($"Id: {anObj.Id} FullName: {anObj.FullName}");
         }
     }
 
-    static string GetInputFromUser(string message, int limit = 3)
+    static string StudentText(Student student)
     {
-        if (limit == 0)
-        {
-            throw new Exception("Input is invalid, maximum retry number exceeded!");
-        }
-
-        Console.Write($"{message}: ");
-
-        string? input = Console.ReadLine();
-
-        if (input is null) input = GetInputFromUser(message, limit - 1);
-
-        return input;
+        return $"Id: {student.Id} Name: {student.Name} Surname: {student.Surname} ClassId: {student.ClassId}";
     }
 
     static void Main(string[] args)
